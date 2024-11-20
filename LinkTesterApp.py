@@ -10,7 +10,7 @@ import tempfile
 import subprocess
 from packaging import version
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 class LinkTesterApp:
     def __init__(self, master):
@@ -191,7 +191,7 @@ class LinkTesterApp:
                 messagebox.showerror("Erreur", "Impossible de trouver l'installer de mise à jour.")
                 return
             if is_newer_version(__version__, latest_version):
-                if messagebox.showyesno("Mise à jour disponible", f"Une nouvelle version {latest_version} est disponible. Voulez-vous la télécharger et l'installer ?"):
+                if messagebox.askyesno ("Mise à jour disponible", f"Une nouvelle version {latest_version} est disponible. Voulez-vous la télécharger et l'installer ?"):
                     download_and_run_installer(download_url)
             else:
                 messagebox.showinfo("Aucune mise à jour", "Vous avez déjà la dernière version.")

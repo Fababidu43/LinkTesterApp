@@ -1,7 +1,7 @@
 ; Script Inno Setup Corrigé
 [Setup]
 AppName=LinkTesterApp
-AppVersion=1.0.1
+AppVersion=1.0.2
 DefaultDirName={pf}\LinkTesterApp
 DefaultGroupName=LinkTesterApp
 OutputBaseFilename=setup_LinkTesterApp
