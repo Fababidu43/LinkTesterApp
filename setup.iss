@@ -1,10 +1,10 @@
 ; Script Inno Setup Corrigé
 [Setup]
 AppName=LinkTesterApp
-AppVersion=1.0.0
+AppVersion={#VERSION}  ; Placeholder pour la version
 DefaultDirName={pf}\LinkTesterApp
 DefaultGroupName=LinkTesterApp
-OutputBaseFilename=setup_LinkTesterApp
+OutputBaseFilename=setup_LinkTesterApp_v{#VERSION}  ; Inclure la version dans le nom de fichier
 Compression=lzma
 SolidCompression=yes
 

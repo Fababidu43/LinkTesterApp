@@ -6,7 +6,7 @@ on:
       - 'v*.*.*'  # Déclenche le workflow pour les tags comme v1.0.0
 
 permissions:
-  contents: write  # Nécessaire pour actions/checkout
+  contents: write  # Nécessaire pour actions/checkout et créer des releases
 
 jobs:
   build:
@@ -29,6 +29,14 @@ jobs:
           pip install pyinstaller
           pip install requests pandas validators packaging
 
+      # Étape 3.5 : Mettre à jour la version dans LinkTesterApp.py
+      - name: Update version in LinkTesterApp.py
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          (Get-Content LinkTesterApp.py) -replace '__version__ = ".*"', "__version__ = `"$version`"" | Set-Content LinkTesterApp.py
+
       # Étape 4 : Construction de l'exécutable avec PyInstaller
       - name: Build executable with PyInstaller
         run: |
@@ -49,20 +57,39 @@ jobs:
         run: |
           choco install innosetup -y
 
-      # Étape 7 : Construction de l'installateur avec Inno Setup
+      # Étape 7 : Définir la version et mettre à jour setup.iss
+      - name: Set version in setup.iss
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          (Get-Content setup.iss) -replace 'AppVersion=.*', "AppVersion=$version" | Set-Content setup.iss
+          (Get-Content setup.iss) -replace 'OutputBaseFilename=.*', "OutputBaseFilename=setup_LinkTesterApp_v$version" | Set-Content setup.iss
+
+      # Étape 8 : Construction de l'installateur avec Inno Setup
       - name: Build installer with Inno Setup
         shell: cmd
         run: |
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
 
-      # Étape 8 : Upload de l'installateur en tant qu'artefact (optionnel)
+      # Étape 8.5 : Vérifier la présence de l'installateur
+      - name: Verify installer existence
+        run: |
+          if exist setup_LinkTesterApp_v${{ github.ref_name }}.exe (
+            echo "Installer found."
+          ) else (
+            echo "Installer not found."
+            exit 1
+          )
+
+      # Étape 9 : Upload de l'installateur en tant qu'artefact (optionnel)
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v3
         with:
           name: LinkTesterApp-Installer
-          path: setup_LinkTesterApp_*.exe
+          path: setup_LinkTesterApp_v${{ github.ref_name }}.exe
 
-      # Étape 9 : Création de la Release GitHub
+      # Étape 10 : Création de la Release GitHub
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -74,13 +101,13 @@ jobs:
           draft: false
           prerelease: false
 
-      # Étape 10 : Upload de l'installateur en tant qu'Asset de la Release
+      # Étape 11 : Upload de l'installateur en tant qu'Asset de la Release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: setup_LinkTesterApp_${{ github.ref_name }}.exe
-          asset_name: setup_LinkTesterApp_${{ github.ref_name }}.exe
+          asset_path: setup_LinkTesterApp_v${{ github.ref_name }}.exe
+          asset_name: setup_LinkTesterApp_v${{ github.ref_name }}.exe
           asset_content_type: application/octet-stream
