@@ -74,13 +74,15 @@ jobs:
 
       # Étape 8.5 : Vérifier la présence de l'installateur
       - name: Verify installer existence
+        shell: powershell
         run: |
-          if exist setup_LinkTesterApp_v${{ github.ref_name }}.exe (
-            echo "Installer found."
-          ) else (
-            echo "Installer not found."
+          $installerPath = "setup_LinkTesterApp_v${{ github.ref_name }}.exe"
+          if (Test-Path $installerPath) {
+            Write-Host "Installer found."
+          } else {
+            Write-Host "Installer not found."
             exit 1
-          )
+          }
 
       # Étape 9 : Upload de l'installateur en tant qu'artefact (optionnel)
       - name: Upload installer as artifact
