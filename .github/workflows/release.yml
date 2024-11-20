@@ -2,7 +2,7 @@ name: Build and Release
 
 permissions:
   contents: write
-  release: write
+  releases: write
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'  # Spécifiez la version de Python
+          python-version: '3.9'  # Spécifiez la version de Python
 
       # Étape 4 : Installation des dépendances
       - name: Install dependencies
