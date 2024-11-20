@@ -57,12 +57,11 @@ jobs:
         run: |
           choco install innosetup -y
 
-      # Étape 7 : Définir la version et mettre à jour setup.iss
       - name: Set version in setup.iss
         shell: powershell
         run: |
           $tag = "${{ github.ref_name }}"
-          $version = $tag.TrimStart('v')
+          $version = $tag -replace '^v', ''  # Supprime uniquement le premier 'v'
           (Get-Content setup.iss) -replace 'AppVersion=.*', "AppVersion=$version" | Set-Content setup.iss
           (Get-Content setup.iss) -replace 'OutputBaseFilename=.*', "OutputBaseFilename=setup_LinkTesterApp_v$version" | Set-Content setup.iss
 
@@ -76,11 +75,13 @@ jobs:
       - name: Verify installer existence
         shell: powershell
         run: |
-          $installerPath = "setup_LinkTesterApp_v${{ github.ref_name }}.exe"
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''  # Supprime uniquement le premier 'v'
+          $installerPath = "setup_LinkTesterApp_v$version.exe"
           if (Test-Path $installerPath) {
-            Write-Host "Installer found."
+            Write-Host "Installer found: $installerPath"
           } else {
-            Write-Host "Installer not found."
+            Write-Host "Installer not found: $installerPath"
             exit 1
           }
 
