@@ -10,7 +10,7 @@ import tempfile
 import subprocess
 from packaging import version
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 class LinkTesterApp:
     def __init__(self, master):
