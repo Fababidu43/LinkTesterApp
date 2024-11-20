@@ -57,6 +57,7 @@ jobs:
           $version = $tag.TrimStart('v')
           (Get-Content setup.iss) -replace '^AppVersion=.*$', "AppVersion=$version" | Set-Content setup.iss
           (Get-Content setup.iss) -replace '^OutputBaseFilename=.*$', "OutputBaseFilename=setup_LinkTesterApp_v$version" | Set-Content setup.iss
+          echo "VERSION=$version" >> $env:GITHUB_ENV
 
       # Étape 7 : Construction de l'installateur avec Inno Setup
       - name: Build installer with Inno Setup
@@ -64,32 +65,23 @@ jobs:
         run: |
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
 
-      # Étape 8 : Upload de l'installateur en tant qu'artefact (optionnel)
-      - name: Upload installer as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: LinkTesterApp-Installer
-          path: setup_LinkTesterApp_*.exe
-
-      # Étape 9 : Création de la Release GitHub
+      # Étape 8 : Création de la Release GitHub
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
 
-      # Étape 10 : Upload de l'installateur en tant qu'Asset de la Release
+      # Étape 9 : Upload de l'installateur en tant qu'Asset de la Release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: setup_LinkTesterApp_v${{ github.ref_name }}.exe
-          asset_name: setup_LinkTesterApp_v${{ github.ref_name }}.exe
+          asset_path: setup_LinkTesterApp_v${{ env.VERSION }}.exe
+          asset_name: setup_LinkTesterApp_v${{ env.VERSION }}.exe
           asset_content_type: application/octet-stream
