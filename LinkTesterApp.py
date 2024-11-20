@@ -10,7 +10,7 @@ import tempfile
 import subprocess
 from packaging import version
 
-__version__ = "1.0.9"
+__version__ = "1.0.0"
 
 class LinkTesterApp:
     def __init__(self, master):
@@ -202,8 +202,17 @@ def get_latest_release(repo_owner, repo_name):
     url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases"
     response = requests.get(url)
     if response.status_code == 200:
-        return response.json()
+        releases = response.json()
+        # Vérifiez si des releases sont disponibles
+        if releases:
+            # Sélectionnez la première release (la plus récente)
+            latest_release = releases[0]
+            return latest_release
+        else:
+            print("Aucune release disponible.")
+            return None
     else:
+        print(f"Erreur : {response.status_code} - {response.text}")
         return None
 
 def is_newer_version(current_version, latest_version):
