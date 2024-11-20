@@ -49,6 +49,15 @@ jobs:
         run: |
           choco install innosetup -y
 
+      # Étape 6.5 : Mettre à jour setup.iss avec la version du tag
+      - name: Update setup.iss with tag version
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          (Get-Content setup.iss) -replace '^AppVersion=.*$', "AppVersion=$version" | Set-Content setup.iss
+          (Get-Content setup.iss) -replace '^OutputBaseFilename=.*$', "OutputBaseFilename=setup_LinkTesterApp_v$version" | Set-Content setup.iss
+
       # Étape 7 : Construction de l'installateur avec Inno Setup
       - name: Build installer with Inno Setup
         shell: cmd
@@ -81,6 +90,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: setup_LinkTesterApp_${{ github.ref_name }}.exe
-          asset_name: setup_LinkTesterApp_${{ github.ref_name }}.exe
+          asset_path: setup_LinkTesterApp_v${{ github.ref_name }}.exe
+          asset_name: setup_LinkTesterApp_v${{ github.ref_name }}.exe
           asset_content_type: application/octet-stream
