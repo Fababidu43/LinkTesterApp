@@ -25,12 +25,10 @@ jobs:
           dir
           echo "Listing .github/workflows directory:"
           dir .github\workflows
-          echo "Listing Output directory (if exists):"
-          if exist Output\ (
-            dir Output
-          ) else (
-            echo "Output directory does not exist."
-          )
+          echo "Listing Output directory:"
+          dir Output
+          echo "Listing dist directory:"
+          dir dist
 
       # Étape 3 : Configuration de Python
       - name: Set up Python
@@ -47,7 +45,6 @@ jobs:
       # Étape 5 : Construction de l'exécutable avec PyInstaller
       - name: Build executable with PyInstaller
         run: |
-          # Ajustez le chemin si main.py est dans un sous-dossier, par exemple src\main.py
           pyinstaller --onefile --name=LinkTesterApp LinkTesterApp.py
 
       # Étape 6 : Installation de Chocolatey
@@ -59,7 +56,7 @@ jobs:
             [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      # Étape 7 : Installation d'Inno Setup via Chocolatey (sans spécifier de version)
+      # Étape 7 : Installation d'Inno Setup via Chocolatey
       - name: Install Inno Setup
         shell: powershell
         run: |
@@ -74,21 +71,32 @@ jobs:
       # Étape 9 : Vérifier la présence de l'installateur
       - name: Verify installer creation
         run: |
-          if exist setup_LinkTesterApp_*.exe (
+          if exist setup_LinkTesterApp.exe (
             echo "Installer found."
           ) else (
             echo "Installer not found."
             exit 1
           )
 
-      # Étape 10 : Upload de l'installateur en tant qu'artefact (optionnel)
+      # Étape 10 : Extraire la version sans le préfixe 'v'
+      - name: Extract version
+        id: extract_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      # Étape 11 : Renommer l'installateur pour inclure la version
+      - name: Rename installer to include version
+        shell: cmd
+        run: |
+          copy setup_LinkTesterApp.exe setup_LinkTesterApp_${{ env.version }}.exe
+
+      # Étape 12 : Upload de l'installateur en tant qu'artefact (optionnel)
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v3
         with:
           name: LinkTesterApp-Installer
-          path: setup_LinkTesterApp_*.exe
+          path: setup_LinkTesterApp_${{ env.version }}.exe
 
-      # Étape 11 : Création de la Release GitHub
+      # Étape 13 : Création de la Release GitHub
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -100,13 +108,13 @@ jobs:
           draft: false
           prerelease: false
 
-      # Étape 12 : Upload de l'installateur en tant qu'Asset de la Release
+      # Étape 14 : Upload de l'installateur en tant qu'Asset de la Release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: setup_LinkTesterApp_${{ github.ref_name }}.exe
-          asset_name: setup_LinkTesterApp_${{ github.ref_name }}.exe
+          asset_path: setup_LinkTesterApp_${{ env.version }}.exe
+          asset_name: setup_LinkTesterApp_${{ env.version }}.exe
           asset_content_type: application/octet-stream
