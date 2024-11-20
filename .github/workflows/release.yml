@@ -1,5 +1,9 @@
 name: Build and Release
 
+permissions:
+  contents: write
+  releases: write
+
 on:
   push:
     tags:
@@ -14,24 +18,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Étape 2 : Configuration de Python
+      # Étape 2 : Lister le contenu du répertoire pour le débogage
+      - name: List directory contents
+        run: |
+          echo "Listing root directory:"
+          dir
+          echo "Listing .github/workflows directory:"
+          dir .github\workflows
+          echo "Listing Output directory (if exists):"
+          if exist Output\ (
+            dir Output
+          ) else (
+            echo "Output directory does not exist."
+          )
+
+      # Étape 3 : Configuration de Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Spécifiez la version de Python
+          python-version: '3.8'  # Spécifiez la version de Python
 
-      # Étape 3 : Installation des dépendances Python
+      # Étape 4 : Installation des dépendances
       - name: Install dependencies
         run: |
           pip install pyinstaller
           pip install requests pandas validators packaging
 
-      # Étape 4 : Construction de l'exécutable avec PyInstaller
+      # Étape 5 : Construction de l'exécutable avec PyInstaller
       - name: Build executable with PyInstaller
         run: |
+          # Ajustez le chemin si main.py est dans un sous-dossier, par exemple src\main.py
           pyinstaller --onefile --name=LinkTesterApp LinkTesterApp.py
 
-      # Étape 5 : Installation de Chocolatey
+      # Étape 6 : Installation de Chocolatey
       - name: Install Chocolatey
         shell: powershell
         run: |
@@ -40,26 +59,36 @@ jobs:
             [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-      # Étape 6 : Installation d'Inno Setup via Chocolatey
+      # Étape 7 : Installation d'Inno Setup via Chocolatey (sans spécifier de version)
       - name: Install Inno Setup
         shell: powershell
         run: |
           choco install innosetup -y
 
-      # Étape 7 : Construction de l'installateur avec Inno Setup
+      # Étape 8 : Construction de l'installateur avec Inno Setup
       - name: Build installer with Inno Setup
         shell: cmd
         run: |
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
 
-      # Étape 8 : Upload de l'installateur en tant qu'artefact (optionnel)
+      # Étape 9 : Vérifier la présence de l'installateur
+      - name: Verify installer creation
+        run: |
+          if exist setup_LinkTesterApp_*.exe (
+            echo "Installer found."
+          ) else (
+            echo "Installer not found."
+            exit 1
+          )
+
+      # Étape 10 : Upload de l'installateur en tant qu'artefact (optionnel)
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v3
         with:
           name: LinkTesterApp-Installer
           path: setup_LinkTesterApp_*.exe
 
-      # Étape 9 : Création de la Release GitHub
+      # Étape 11 : Création de la Release GitHub
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -71,7 +100,7 @@ jobs:
           draft: false
           prerelease: false
 
-      # Étape 10 : Upload de l'installateur en tant qu'Asset de la Release
+      # Étape 12 : Upload de l'installateur en tant qu'Asset de la Release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
