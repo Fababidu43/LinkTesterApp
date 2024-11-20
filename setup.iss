@@ -4,7 +4,7 @@ AppName=LinkTesterApp
 AppVersion=1.0.0
 DefaultDirName={pf}\LinkTesterApp
 DefaultGroupName=LinkTesterApp
-OutputBaseFilename=setup_LinkTesterApp_1.0.0
+OutputBaseFilename=setup_LinkTesterApp
 Compression=lzma
 SolidCompression=yes
 
