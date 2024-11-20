@@ -32,7 +32,7 @@ jobs:
       # Étape 4 : Construction de l'exécutable avec PyInstaller
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --onefile --name=LinkTesterApp LinkTesterApp.py
+          pyinstaller --onefile --name=LinkTesterApp --noconsole LinkTesterApp.py
 
       # Étape 5 : Installation de Chocolatey
       - name: Install Chocolatey
