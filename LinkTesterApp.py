@@ -10,10 +10,7 @@ import tempfile
 import subprocess
 from packaging import version
 
-__version__ = "1.0.3"
-
-# Afficher un message d'accueil au lancement de l'application
-messagebox.showinfo("Bienvenue", "Bienvenue dans la nouvelle version de l'application !")
+__version__ = "1.0.0"
 
 class LinkTesterApp:
     def __init__(self, master):
